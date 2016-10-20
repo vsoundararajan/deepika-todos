@@ -34,7 +34,7 @@ app.get('/todos/:id', (req, res) => {
 
 //POST /todos
 app.post('/todos', (req, res) => {
-   var body = _.pick(req.body, ["description", "completed"]);
+    var body = _.pick(req.body, ["description", "completed"]);
     console.log(body.description);
     if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length <= 0 ){
         return res.status(400).send();
@@ -57,6 +57,35 @@ app.delete('/todos/:id', (req, res) => {
     }else{
         res.status(404).send(`${todoId} not found!`);
     }
+
+});
+
+// PUT
+
+app.put('/todos/:id', (req, res) => {
+    var todoId = parseInt(req.params.id, 10);
+    var foundTodo = _.find(todos, {id: todoId});
+
+    if(!foundTodo){
+       return res.status(404).json({"error": `${req.params.id} does not exist.`})
+    }
+
+    var body = _.pick(req.body, ["description", "completed"]);
+    var validAttributes = {};
+    if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttributes.completed = body.completed;
+    }else if( body.hasOwnProperty('completed') ){
+        return res.status(400).json({error: "completed  is not boolean"});
+    }
+    if(body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+        validAttributes.description = body.description.trim();
+    }else if(body.hasOwnProperty('description')) {
+        return res.status(400).json({error: "description  is not string or empty string."});
+    }
+
+    //  Here we update the todos
+    _.assignIn(foundTodo, validAttributes);
+    res.json(validAttributes);
 
 });
 
