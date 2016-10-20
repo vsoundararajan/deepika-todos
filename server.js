@@ -47,6 +47,18 @@ app.post('/todos', (req, res) => {
 
 });
 
+//DELETE
+app.delete('/todos/:id', (req, res) => {
+    var todoId = parseInt(req.params.id, 10);
+    var foundTodo = _.find(todos, {id: todoId});
+    if(typeof foundTodo !== 'undefined'){
+        todos = _.without(todos, foundTodo);
+        res.json(foundTodo);
+    }else{
+        res.status(404).send(`${todoId} not found!`);
+    }
+
+});
 
 app.listen(PORT, () => {
     console.log('Express listening on port ' + PORT + '!');
