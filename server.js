@@ -7,7 +7,22 @@ var bodyParser = require('body-parser');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todos = [];
+var todos = [{
+    "description": "Walk the dog",
+    "completed": true
+},
+
+    {
+        "description": "Talk the dog",
+        "completed": false
+    },
+
+    {
+        "description": "Wash the dog",
+        "completed": true
+    }
+
+];
 var todoNextId = 1;
 
 app.use(bodyParser.json());
@@ -24,6 +39,12 @@ app.get('/todos', (req, res) => {
         filteredTodos = _.filter(filteredTodos, {completed: true});
     }else if (queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "false") {
         filteredTodos = _.filter(filteredTodos, {completed: false});
+    }
+
+    if(queryParams && queryParams.hasOwnProperty("q") && _.isString(queryParams.q) &&  queryParams.q.length > 0 ){
+        filteredTodos = _.filter(filteredTodos, (todo) => {
+            return todo.description.toLowerCase().indexOf(queryParams.q.toLocaleLowerCase()) >= 0;
+        } );
     }
 
    res.json(filteredTodos);
