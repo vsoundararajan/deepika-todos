@@ -111,28 +111,29 @@ app.delete('/todos/:id', (req, res) => {
 
 app.put('/todos/:id', (req, res) => {
     var todoId = parseInt(req.params.id, 10);
-    var foundTodo = _.find(todos, {id: todoId});
-
-    if(!foundTodo){
-       return res.status(404).json({"error": `${req.params.id} does not exist.`})
-    }
-
     var body = _.pick(req.body, ["description", "completed"]);
-    var validAttributes = {};
-    if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        validAttributes.completed = body.completed;
-    }else if( body.hasOwnProperty('completed') ){
-        return res.status(400).json({error: "completed  is not boolean"});
+    var attributes = {};
+
+    if(body.hasOwnProperty('completed')) {
+        attributes.completed = body.completed;
     }
-    if(body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-        validAttributes.description = body.description.trim();
-    }else if(body.hasOwnProperty('description')) {
-        return res.status(400).json({error: "description  is not string or empty string."});
+    if(body.hasOwnProperty('description')) {
+        attributes.description = body.description;
     }
 
-    //  Here we update the todos
-    _.assignIn(foundTodo, validAttributes);
-    res.json(validAttributes);
+    db.todo.findById(todoId).then( (todo) => {
+        if(todo){
+          todo.update(attributes).then( (todo) => {
+              res.json(todo.toJSON());
+          }, (e) => {
+              res.status(400).json(e);
+          });
+        }else{
+            res.status(404).send();
+        }
+    }, (e) => {
+        res.status(500).send();
+    });
 
 });
 
