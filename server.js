@@ -47,29 +47,11 @@ app.get('/todos', (req, res) => {
     db.todo.findAll({
          where
     }).then( (todos) =>{
-        // if(todos.length > 0) {
             res.json(todos);
-        // }else {
-        //     res.json({});
-        // }
     }, (e) => {
         res.status(500).send();
     });
-   //  var filteredTodos = todos;
-   //
-   //  if(queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "true"){
-   //      filteredTodos = _.filter(filteredTodos, {completed: true});
-   //  }else if (queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "false") {
-   //      filteredTodos = _.filter(filteredTodos, {completed: false});
-   //  }
-   //
-   //  if(queryParams && queryParams.hasOwnProperty("q") && _.isString(queryParams.q) &&  queryParams.q.length > 0 ){
-   //      filteredTodos = _.filter(filteredTodos, (todo) => {
-   //          return todo.description.toLowerCase().indexOf(queryParams.q.toLocaleLowerCase()) >= 0;
-   //      } );
-   //  }
-   //
-   // res.json(filteredTodos);
+
 });
 
 
@@ -85,27 +67,11 @@ app.get('/todos/:id', (req, res) => {
       res.status(500).send();
    });
 
-    // var foundTodo = _.find(todos, {id: todoId});
-    // if(typeof foundTodo !== 'undefined'){
-    //     res.json(foundTodo);
-    // }else{
-    //     res.status(404).send(`${todoId} not found!`);
-    // }
-
 });
 
 //POST /todos
 app.post('/todos', (req, res) => {
     var body = _.pick(req.body, ["description", "completed"]);
-   //  console.log(body.description);
-   //  if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length <= 0 ){
-   //      return res.status(400).send();
-   //  }
-   //  body.description = body.description.trim();
-   //  body.id = todoNextId++;
-   //  todos.push(body);
-   //
-   // res.json(body);
     db.todo.create(
         body
     ).then( (todo) => {
@@ -122,14 +88,23 @@ app.post('/todos', (req, res) => {
 //DELETE
 app.delete('/todos/:id', (req, res) => {
     var todoId = parseInt(req.params.id, 10);
-    var foundTodo = _.find(todos, {id: todoId});
-    if(typeof foundTodo !== 'undefined'){
-        todos = _.without(todos, foundTodo);
-        res.json(foundTodo);
-    }else{
-        res.status(404).send(`${todoId} not found!`);
-    }
 
+
+    db.todo.destroy({
+        where: {
+            id: todoId
+        }
+    }).then((noOfRowsDeleted) => {
+        if (noOfRowsDeleted > 0) {
+            res.status(204).send();
+        } else {
+            res.status(404).json({
+                error: `No todo item with id ${todoId}`
+            })
+        }
+    }, (e) => {
+        res.status(500).send();
+    });
 });
 
 // PUT
