@@ -4,7 +4,7 @@
 var express = require('express');
 var _ = require('lodash');
 var bodyParser = require('body-parser');
-
+var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3000;
 var todos = [{
@@ -65,17 +65,27 @@ app.get('/todos/:id', (req, res) => {
 //POST /todos
 app.post('/todos', (req, res) => {
     var body = _.pick(req.body, ["description", "completed"]);
-    console.log(body.description);
-    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length <= 0 ){
-        return res.status(400).send();
-    }
-    body.description = body.description.trim();
-    body.id = todoNextId++;
-    todos.push(body);
-
-   res.json(body);
+   //  console.log(body.description);
+   //  if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length <= 0 ){
+   //      return res.status(400).send();
+   //  }
+   //  body.description = body.description.trim();
+   //  body.id = todoNextId++;
+   //  todos.push(body);
+   //
+   // res.json(body);
+    db.todo.create(
+        body
+    ).then( (todo) => {
+        console.log(JSON.stringify(todo) + " is created");
+        res.json(todo.toJSON());
+    }, (e) => {
+        console.log(e);
+        res.status(400).json({error: JSON.stringify(body) + " is not created" });
+    });
 
 });
+
 
 //DELETE
 app.delete('/todos/:id', (req, res) => {
@@ -119,7 +129,11 @@ app.put('/todos/:id', (req, res) => {
 
 });
 
-app.listen(PORT, () => {
-    console.log('Express listening on port ' + PORT + '!');
-} );
+db.sequelize.sync().then( () => {
+    app.listen(PORT, () => {
+        console.log('Express listening on port ' + PORT + '!');
+    } );
+});
+
+
 
