@@ -32,22 +32,44 @@ app.get('/', (req, res) => {
 });
 
 app.get('/todos', (req, res) => {
-    var queryParams = req.query;
-    var filteredTodos = todos;
-
-    if(queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "true"){
-        filteredTodos = _.filter(filteredTodos, {completed: true});
-    }else if (queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "false") {
-        filteredTodos = _.filter(filteredTodos, {completed: false});
+    var query = req.query;
+    var where = {};
+     if(query && query.hasOwnProperty("completed") && query.completed === "true"){
+        where.completed = true;
+    }else if (query && query.hasOwnProperty("completed") && query.completed === "false") {
+         where.completed = false;
     }
-
-    if(queryParams && queryParams.hasOwnProperty("q") && _.isString(queryParams.q) &&  queryParams.q.length > 0 ){
-        filteredTodos = _.filter(filteredTodos, (todo) => {
-            return todo.description.toLowerCase().indexOf(queryParams.q.toLocaleLowerCase()) >= 0;
-        } );
+    if (query && query.hasOwnProperty("q") && _.isString(query.q) && query.q.length > 0) {
+        where.description = {
+            $like: `%${query.q}%`
+        }
     }
-
-   res.json(filteredTodos);
+    db.todo.findAll({
+         where
+    }).then( (todos) =>{
+        // if(todos.length > 0) {
+            res.json(todos);
+        // }else {
+        //     res.json({});
+        // }
+    }, (e) => {
+        res.status(500).send();
+    });
+   //  var filteredTodos = todos;
+   //
+   //  if(queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "true"){
+   //      filteredTodos = _.filter(filteredTodos, {completed: true});
+   //  }else if (queryParams && queryParams.hasOwnProperty("completed") && queryParams.completed === "false") {
+   //      filteredTodos = _.filter(filteredTodos, {completed: false});
+   //  }
+   //
+   //  if(queryParams && queryParams.hasOwnProperty("q") && _.isString(queryParams.q) &&  queryParams.q.length > 0 ){
+   //      filteredTodos = _.filter(filteredTodos, (todo) => {
+   //          return todo.description.toLowerCase().indexOf(queryParams.q.toLocaleLowerCase()) >= 0;
+   //      } );
+   //  }
+   //
+   // res.json(filteredTodos);
 });
 
 
