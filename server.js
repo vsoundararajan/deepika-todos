@@ -79,8 +79,11 @@ app.post('/todos', middleware.rquireAuthentication,  (req, res) => {
     db.todo.create(
         body
     ).then( (todo) => {
-        console.log(JSON.stringify(todo) + " is created");
-        res.json(todo.toJSON());
+        req.user.addTodo(todo).then( function(){
+           return todo.reload();
+        }).then (function(todo){
+             res.json(todo.toJSON());
+        });
     }, (e) => {
         console.log(e);
         res.status(400).json({error: JSON.stringify(body) + " is not created" });
@@ -169,7 +172,9 @@ app.post('/users/login', function(req, res){
 });
 
 
-db.sequelize.sync().then( () => {
+db.sequelize.sync({
+    force: true
+}).then( () => {
     app.listen(PORT, () => {
         console.log('Express listening on port ' + PORT + '!');
     } );

@@ -22,54 +22,41 @@ var Todo = sequelize.define('todo', {
         allowNull: false,
         defaultValue: false
     }
-})
-sequelize.sync().then( () => {
+});
+
+var User = sequelize.define('user',{
+    email: Sequelize.STRING
+});
+
+Todo.belongsTo(User);
+User.hasMany(Todo);
+
+sequelize.sync({
+    //force: true
+   }).then( () => {
     console.log('Everything is synced');
-
-    Todo.findAll({
-       where: {
-           description: {
-               $like: '%sAfEwAy%'
+    User.findById(1).then( function (user){
+       user.getTodos({
+           where: {
+               "completed": true
            }
-       }
-    }).then( (todos) =>{
-        if(todos.length > 0) {
-            todos.forEach((todo) => {
-                console.log(todo.toJSON());
-            });
-        }else {
-            console.log('No todos to print');
-        }
-    }).catch( (e) =>{
-      console.log(e);
+       }).then(function (todos) {
+          todos.forEach( function(todo){
+             console.log(todo.toJSON());
+          });
+       });
     });
-
-    // Todo.create({
-    //     description: 'feed the dogs',
-    //     completed: true
-    // }).then((todo) => {
+    // User.create({
+    //     email: 'soundararajan@usa.net'
+    // }).then( function () {
     //     return Todo.create({
-    //        description: "Go to Safeway"
+    //         description: "Finish all these courses"
     //     });
-    // }).then( () => {
-    //    //return Todo.findById(1);
-    //     return Todo.findAll({
-    //         where: {
-    //             description: {
-    //                 $like: '%safeway%'
-    //             }
-    //         }
+    // }).then( function (todo) {
+    //     User.findById(1).then( function (user){
+    //        user.addTodo(todo);
     //     });
-    // }).then( (todos) => {
-    //     if(todos) {
-    //         todos.forEach((todo) => {
-    //           console.log(todo.toJSON());
-    //         });
-    //     }else {
-    //         console.log('no to dos found');
-    //     }
-    // }).catch( (e) => {
-    //    console.log(e);
     // });
+
 });
 
