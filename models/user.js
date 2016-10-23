@@ -3,6 +3,8 @@
  */
 var _ = require('lodash');
 var bcrypt = require('bcrypt');
+var cryptojs = require('crypto-js');
+var jwt = require('jsonwebtoken');
 
 module.exports = (sequelize, DataTypes) => {
     var user = sequelize.define('user', {
@@ -69,6 +71,23 @@ module.exports = (sequelize, DataTypes) => {
          toPublicJSON: function() {
              var json = this.toJSON();
              return _.pick(json, ['id', 'email', 'createdAt', 'updatedAt']);
+         },
+         generateToken: function (type){
+             if(!_.isString(type)){
+                 return undefined;
+             }
+             try {
+               var stringData = JSON.stringify({id: this.get('id'), type: type});
+               var encryptedData = cryptojs.AES.encrypt(stringData, 'abc123!@#!').toString();
+               var token = jwt.sign({
+                   token: encryptedData
+               }, "qwerty098");
+
+              return token;
+             } catch (e) {
+                console.log(e);
+                return undefined;
+             }
          }
        }
     });
