@@ -9,6 +9,8 @@ var bodyParser = require('body-parser');
 var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3000;
+var middleware = require('./middleware')(db);
+
 var todos = [{
     "description": "Walk the dog",
     "completed": true
@@ -33,7 +35,7 @@ app.get('/', (req, res) => {
    res.send('Todo API Root');
 });
 
-app.get('/todos', (req, res) => {
+app.get('/todos', middleware.rquireAuthentication, (req, res) => {
     var query = req.query;
     var where = {};
      if(query && query.hasOwnProperty("completed") && query.completed === "true"){
@@ -57,7 +59,7 @@ app.get('/todos', (req, res) => {
 });
 
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
    var todoId = parseInt(req.params.id, 10);
    db.todo.findById(todoId).then( (todo) => {
        if(!!todo){
@@ -72,7 +74,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 //POST /todos
-app.post('/todos', (req, res) => {
+app.post('/todos', middleware.rquireAuthentication,  (req, res) => {
     var body = _.pick(req.body, ["description", "completed"]);
     db.todo.create(
         body
@@ -88,7 +90,7 @@ app.post('/todos', (req, res) => {
 
 
 //DELETE
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
     var todoId = parseInt(req.params.id, 10);
 
 
@@ -111,7 +113,7 @@ app.delete('/todos/:id', (req, res) => {
 
 // PUT
 
-app.put('/todos/:id', (req, res) => {
+app.put('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
     var todoId = parseInt(req.params.id, 10);
     var body = _.pick(req.body, ["description", "completed"]);
     var attributes = {};
