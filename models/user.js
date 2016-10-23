@@ -5,7 +5,7 @@ var _ = require('lodash');
 var bcrypt = require('bcrypt');
 
 module.exports = (sequelize, DataTypes) => {
-    return sequelize.define('user', {
+    var user = sequelize.define('user', {
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -42,6 +42,29 @@ module.exports = (sequelize, DataTypes) => {
                }
            }
        },
+        classMethods: {
+           authenticate: function (body) {
+               return new Promise( function(resolve, reject){
+                   if(body.email && _.isString(body.email) && body.email.length > 0 &&
+                       body.password && _.isString(body.password) && body.password.length > 0){
+                       user.findOne({
+                           where: {email: body.email}
+                       }).then( function(user){
+                           //console.log(user.get('password_hash'));
+                           if(!user || !bcrypt.compareSync(body.password, user.get('password_hash'))){
+                               return reject();
+                           }else{
+                               resolve(user);
+                           }
+                       }, function(err){
+                           reject();
+                       });
+                   }else{
+                       return reject();
+                   }
+               });
+           }
+        },
        instanceMethods: {
          toPublicJSON: function() {
              var json = this.toJSON();
@@ -49,4 +72,6 @@ module.exports = (sequelize, DataTypes) => {
          }
        }
     });
+
+    return user;
 }

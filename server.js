@@ -2,6 +2,8 @@
  * Created by soundararajanvenkatasubramanian on 10/19/16.
  */
 var express = require('express');
+var bcrypt = require('bcrypt');
+
 var _ = require('lodash');
 var bodyParser = require('body-parser');
 var db = require('./db.js');
@@ -147,7 +149,20 @@ app.post('/users', (req, res) => {
     });
 });
 
-db.sequelize.sync().then( () => {
+
+// POST /user/login
+
+app.post('/users/login', function(req, res){
+    var body = _.pick(req.body, ["email", "password"]);
+    db.user.authenticate(body).then( function(user){
+        res.json(user.toPublicJSON());
+    }, function() {
+        res.status(401).send();
+    });
+});
+
+
+db.sequelize.sync({force: true}).then( () => {
     app.listen(PORT, () => {
         console.log('Express listening on port ' + PORT + '!');
     } );
