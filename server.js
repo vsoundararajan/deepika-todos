@@ -37,8 +37,10 @@ app.get('/', (req, res) => {
 
 app.get('/todos', middleware.rquireAuthentication, (req, res) => {
     var query = req.query;
-    var where = {};
-     if(query && query.hasOwnProperty("completed") && query.completed === "true"){
+    var where = {
+        userId: req.user.get('id')
+    };
+    if(query && query.hasOwnProperty("completed") && query.completed === "true"){
         where.completed = true;
     }else if (query && query.hasOwnProperty("completed") && query.completed === "false") {
          where.completed = false;
@@ -61,7 +63,12 @@ app.get('/todos', middleware.rquireAuthentication, (req, res) => {
 
 app.get('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
    var todoId = parseInt(req.params.id, 10);
-   db.todo.findById(todoId).then( (todo) => {
+   db.todo.findOne({
+       where: {
+           userId: req.user.get('id'),
+           id: todoId
+       }
+   }).then( (todo) => {
        if(!!todo){
          res.json(todo.toJSON());
        }else{
@@ -99,7 +106,8 @@ app.delete('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
 
     db.todo.destroy({
         where: {
-            id: todoId
+            id: todoId,
+            userId: req.user.get('id')
         }
     }).then((noOfRowsDeleted) => {
         if (noOfRowsDeleted > 0) {
@@ -128,7 +136,12 @@ app.put('/todos/:id', middleware.rquireAuthentication,  (req, res) => {
         attributes.description = body.description;
     }
 
-    db.todo.findById(todoId).then( (todo) => {
+    db.todo.findOne({
+        where: {
+            id: todoId,
+            userId: req.user.get('id')
+        }
+    }).then( (todo) => {
         if(todo){
           todo.update(attributes).then( (todo) => {
               res.json(todo.toJSON());
@@ -172,9 +185,7 @@ app.post('/users/login', function(req, res){
 });
 
 
-db.sequelize.sync({
-    force: true
-}).then( () => {
+db.sequelize.sync().then( () => {
     app.listen(PORT, () => {
         console.log('Express listening on port ' + PORT + '!');
     } );
